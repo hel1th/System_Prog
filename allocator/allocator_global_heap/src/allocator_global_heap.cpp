@@ -1,49 +1,51 @@
-#include <not_implemented.h>
 #include "../include/allocator_global_heap.h"
+#include <cstddef>
+#include <iostream>
+#include <mutex>
+#include <new>
+// #define DEBUG_ALLOCATOR 1
 
-allocator_global_heap::allocator_global_heap()
-{
-    throw not_implemented("allocator_global_heap::allocator_global_heap()", "your code should be here...");
+allocator_global_heap::allocator_global_heap() {}
+
+allocator_global_heap::~allocator_global_heap() {}
+
+allocator_global_heap::allocator_global_heap(
+    const allocator_global_heap &other) {}
+
+allocator_global_heap &
+allocator_global_heap::operator=(const allocator_global_heap &other) {
+  return *this;
 }
 
-[[nodiscard]] void *allocator_global_heap::do_allocate_sm(
-    size_t size)
-{
-    throw not_implemented("[[nodiscard]] void *allocator_global_heap::do_allocate_sm(size_t)", "your code should be here...");
+allocator_global_heap::allocator_global_heap(
+    allocator_global_heap &&other) noexcept {}
+
+allocator_global_heap &
+allocator_global_heap::operator=(allocator_global_heap &&other) noexcept {
+  return *this;
 }
 
-void allocator_global_heap::do_deallocate_sm(
-    void *at)
-{
-    throw not_implemented("void allocator_global_heap::do_deallocate_sm(void *)", "your code should be here...");
+[[nodiscard]] void *allocator_global_heap::do_allocate_sm(size_t size) {
+  std::lock_guard<std::mutex> lock(_mtx);
+  void *ptr = ::operator new(size);
+#ifdef DEBUG_ALLOCATOR
+  std::cout << "[allocate] size=" << size << " ptr=" << ptr
+            << " dump=" << get_dump(reinterpret_cast<char *>(ptr), size)
+            << "\n";
+#endif
+  return ptr;
 }
 
-allocator_global_heap::~allocator_global_heap()
-{
-    throw not_implemented("allocator_global_heap::~allocator_global_heap()", "your code should be here...");
+void allocator_global_heap::do_deallocate_sm(void *at) {
+  std::lock_guard<std::mutex> lock(_mtx);
+#ifdef DEBUG_ALLOCATOR
+  std::cout << "[deallocate] ptr=" << at
+            << " dump=" << get_dump(reinterpret_cast<char *>(at), 8) << "\n";
+#endif
+  ::operator delete(at);
 }
 
-allocator_global_heap::allocator_global_heap(const allocator_global_heap &other)
-{
-    throw not_implemented("allocator_global_heap::allocator_global_heap(const allocator_global_heap &other)", "your code should be here...");
-}
-
-allocator_global_heap &allocator_global_heap::operator=(const allocator_global_heap &other)
-{
-    throw not_implemented("allocator_global_heap &allocator_global_heap::operator=(const allocator_global_heap &other)", "your code should be here...");
-}
-
-bool allocator_global_heap::do_is_equal(const std::pmr::memory_resource &other) const noexcept
-{
-    throw not_implemented("bool allocator_global_heap::do_is_equal(const std::pmr::memory_resource &other) const noexcept", "your code should be here...");
-}
-
-allocator_global_heap::allocator_global_heap(allocator_global_heap &&other) noexcept
-{
-    throw not_implemented("allocator_global_heap::allocator_global_heap(allocator_global_heap &&) noexcept", "your code should be here...");
-}
-
-allocator_global_heap &allocator_global_heap::operator=(allocator_global_heap &&other) noexcept
-{
-    throw not_implemented("allocator_global_heap &allocator_global_heap::operator=(allocator_global_heap &&) noexcept", "your code should be here...");
+bool allocator_global_heap::do_is_equal(
+    const std::pmr::memory_resource &other) const noexcept {
+  return dynamic_cast<const allocator_global_heap *>(&other) != nullptr;
 }

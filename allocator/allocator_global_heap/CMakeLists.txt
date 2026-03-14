@@ -17,3 +17,12 @@ target_link_libraries(
         sys_prog_allctr_allctr_glbl_hp
         PUBLIC
         sys_prog_allctr_allctr)
+
+add_executable(
+        allocator_global_heap_demo
+        src/main.cpp)
+
+target_link_libraries(
+        allocator_global_heap_demo
+        PRIVATE
+        sys_prog_allctr_allctr_glbl_hp)

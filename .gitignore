@@ -39,3 +39,5 @@ cmake-build-*
 
 # cmake-build-debug directory
 cmake-build-debug/
+build/
+.cache/

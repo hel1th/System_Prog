@@ -10,7 +10,6 @@ class allocator_global_heap final : private allocator_dbg_helper,
 
 private:
   static constexpr const size_t size_t_size = sizeof(size_t);
-  mutable std::mutex _mtx;
 
 public:
   explicit allocator_global_heap();

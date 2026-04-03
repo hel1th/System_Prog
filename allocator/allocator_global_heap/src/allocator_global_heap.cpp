@@ -26,7 +26,6 @@ allocator_global_heap::operator=(allocator_global_heap &&other) noexcept {
 }
 
 [[nodiscard]] void *allocator_global_heap::do_allocate_sm(size_t size) {
-  std::lock_guard<std::mutex> lock(_mtx);
   void *ptr = ::operator new(size);
 #ifdef DEBUG_ALLOCATOR
   std::cout << "[allocate] size=" << size << " ptr=" << ptr
@@ -37,7 +36,6 @@ allocator_global_heap::operator=(allocator_global_heap &&other) noexcept {
 }
 
 void allocator_global_heap::do_deallocate_sm(void *at) {
-  std::lock_guard<std::mutex> lock(_mtx);
 #ifdef DEBUG_ALLOCATOR
   std::cout << "[deallocate] ptr=" << at
             << " dump=" << get_dump(reinterpret_cast<char *>(at), 8) << "\n";

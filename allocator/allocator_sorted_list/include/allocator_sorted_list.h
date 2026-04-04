@@ -21,6 +21,18 @@ private:
   static constexpr const size_t block_metadata_size =
       sizeof(void *) + sizeof(size_t);
 
+  std::pmr::memory_resource *get_parent() const noexcept;
+  fit_mode get_fit_mode() const noexcept;
+  size_t get_space_size() const noexcept;
+  std::mutex &get_mutex() const noexcept;
+  void *get_first_free() const noexcept;
+  void set_first_free(void *ptr) noexcept;
+
+  static size_t read_space_size(void *trusted) noexcept;
+  static void *read_first_free(void *trusted) noexcept;
+  static void *read_block_next(void *block) noexcept;
+  static size_t read_block_size(void *block) noexcept;
+
 public:
   explicit allocator_sorted_list(
       size_t space_size, std::pmr::memory_resource *parent_allocator = nullptr,

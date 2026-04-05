@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <memory_resource>
 #include <mutex>
+#include <new>
 #include <not_implemented.h>
 
 allocator_sorted_list::~allocator_sorted_list() {
@@ -59,9 +60,73 @@ allocator_sorted_list::allocator_sorted_list(
 }
 
 [[nodiscard]] void *allocator_sorted_list::do_allocate_sm(size_t size) {
-  throw not_implemented(
-      "[[nodiscard]] void *allocator_sorted_list::do_allocate_sm(size_t)",
-      "your code should be here...");
+  std::lock_guard<std::mutex> lock(get_mutex());
+
+  void *prev = nullptr;
+  void *chosen = nullptr;
+  void *chosen_prev = nullptr;
+
+  void *curr = get_first_free();
+
+  while (curr != nullptr) {
+    size_t curr_size = read_block_size(curr);
+
+    if (curr_size >= size) {
+      switch (get_fit_mode()) {
+      case fit_mode::first_fit:
+        chosen = curr;
+        chosen_prev = prev;
+        curr = nullptr;
+        break;
+
+      case fit_mode::the_best_fit:
+        if (chosen == nullptr || curr_size < read_block_size(chosen)) {
+          chosen_prev = chosen;
+          chosen = curr;
+        }
+        break;
+      case fit_mode::the_worst_fit:
+        if (chosen == nullptr || curr_size < read_block_size(chosen)) {
+          chosen_prev = chosen;
+          chosen = curr;
+        }
+        break;
+      }
+    }
+
+    if (curr != nullptr) {
+      prev = curr;
+      curr = read_block_next(curr);
+    }
+  }
+
+  if (chosen == nullptr)
+    throw std::bad_alloc();
+
+  size_t chosen_size = read_block_size(chosen);
+  void *remainder = nullptr;
+
+  if (chosen_size >= size + block_metadata_size + 1) {
+    remainder = reinterpret_cast<char *>(chosen) + block_metadata_size + size;
+
+    *reinterpret_cast<void **>(remainder) = read_block_next(chosen);
+    *reinterpret_cast<size_t *>(reinterpret_cast<char *>(remainder) +
+                                sizeof(void *)) =
+        chosen_size - size - block_metadata_size;
+  }
+
+  void *next = remainder != nullptr ? remainder : read_block_next(chosen);
+
+  if (chosen_prev != nullptr)
+    set_first_free(next);
+  else
+    *reinterpret_cast<void **>(chosen_prev) = next;
+
+  *reinterpret_cast<size_t *>(chosen + sizeof(void *)) = size;
+
+  void *data_start = reinterpret_cast<char *>(chosen) + block_metadata_size;
+
+  return data_start;
 }
 
 allocator_sorted_list::allocator_sorted_list(
@@ -92,7 +157,7 @@ void allocator_sorted_list::do_deallocate_sm(void *at) {
 
 inline void
 allocator_sorted_list::set_fit_mode(allocator_with_fit_mode::fit_mode mode) {
-  
+
   auto *ptr = reinterpret_cast<char *>(_trusted_memory) +
               sizeof(std::pmr::memory_resource *);
 

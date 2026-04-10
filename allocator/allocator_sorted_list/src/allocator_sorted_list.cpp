@@ -123,13 +123,10 @@ allocator_sorted_list::allocator_sorted_list(
   size_t chosen_size = read_block_size(chosen);
   void *remainder = nullptr;
 
-  // Split only if the leftover can hold a block header + at least 1 byte
   if (chosen_size >= size + block_metadata_size + 1) {
     remainder = reinterpret_cast<char *>(chosen) + block_metadata_size + size;
 
-    // remainder's next pointer = chosen's old next
     *reinterpret_cast<void **>(remainder) = read_block_next(chosen);
-    // remainder's size = leftover after header + requested bytes
     *reinterpret_cast<size_t *>(reinterpret_cast<char *>(remainder) +
                                 sizeof(void *)) =
         chosen_size - size - block_metadata_size;
@@ -137,16 +134,12 @@ allocator_sorted_list::allocator_sorted_list(
 
   void *next = remainder != nullptr ? remainder : read_block_next(chosen);
 
-  // FIX: conditions were swapped in the original
   if (chosen_prev == nullptr) {
-    // chosen was the first free block
     set_first_free(next);
   } else {
-    // link chosen_prev directly to next
     *reinterpret_cast<void **>(chosen_prev) = next;
   }
 
-  // Record the actually allocated size in the block header
   *reinterpret_cast<size_t *>(reinterpret_cast<char *>(chosen) +
                               sizeof(void *)) = size;
 
@@ -198,7 +191,6 @@ void allocator_sorted_list::do_deallocate_sm(void *at) {
     throw std::invalid_argument("block does not belong to this allocator");
   }
 
-  // Find insertion position in the sorted free list
   void *prev = nullptr;
   void *curr = get_first_free();
 
@@ -207,7 +199,6 @@ void allocator_sorted_list::do_deallocate_sm(void *at) {
     curr = read_block_next(curr);
   }
 
-  // Insert block between prev and curr
   *reinterpret_cast<void **>(block) = curr;
 
   if (prev == nullptr) {
@@ -216,27 +207,22 @@ void allocator_sorted_list::do_deallocate_sm(void *at) {
     *reinterpret_cast<void **>(prev) = block;
   }
 
-  // Merge block with successor (curr) if adjacent
   void *block_end = reinterpret_cast<char *>(block) + block_metadata_size +
                     read_block_size(block);
 
   if (curr != nullptr && block_end == curr) {
-    // Absorb curr into block
     *reinterpret_cast<void **>(block) = read_block_next(curr);
     *reinterpret_cast<size_t *>(reinterpret_cast<char *>(block) +
                                 sizeof(void *)) =
         read_block_size(block) + block_metadata_size + read_block_size(curr);
   }
 
-  // Merge predecessor (prev) with block if adjacent
-  // NOTE: must be done AFTER the block+curr merge so block's final size is
-  // known
+
   if (prev != nullptr) {
     void *prev_end = reinterpret_cast<char *>(prev) + block_metadata_size +
                      read_block_size(prev);
 
     if (prev_end == block) {
-      // Absorb block (possibly already merged with curr) into prev
       *reinterpret_cast<void **>(prev) = read_block_next(block);
       *reinterpret_cast<size_t *>(reinterpret_cast<char *>(prev) +
                                   sizeof(void *)) =

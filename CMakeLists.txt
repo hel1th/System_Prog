@@ -9,11 +9,7 @@ message([[VCPKG toolchain setup example. It is needed for some libraries. Highly
         set(VCPKG_TARGET_TRIPLET x64-windows)
         set(CMAKE_TOOLCHAIN_FILE C:/Programming/vcpkg/scripts/buildsystems/vcpkg.cmake)]])
 
-include(FetchContent)
-FetchContent_Declare(
-        googletest
-        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip)
-FetchContent_MakeAvailable(googletest)
+find_package(GTest REQUIRED)
 
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost COMPONENTS container REQUIRED) # Ставить через vcpkg

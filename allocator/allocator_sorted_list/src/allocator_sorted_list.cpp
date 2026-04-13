@@ -13,6 +13,7 @@ allocator_sorted_list::~allocator_sorted_list() {
   get_parent()->deallocate(_trusted_memory, allocator_metadata_size +
                                                 block_metadata_size +
                                                 get_space_size());
+  _trusted_memory = nullptr;
 }
 
 allocator_sorted_list::allocator_sorted_list(
@@ -152,6 +153,7 @@ allocator_sorted_list::allocator_sorted_list(
       allocator_metadata_size + block_metadata_size + other.get_space_size();
   _trusted_memory = other.get_parent()->allocate(totalSize);
   std::memcpy(_trusted_memory, other._trusted_memory, totalSize);
+  new (&get_mutex()) std::mutex();
 }
 
 allocator_sorted_list &
@@ -168,6 +170,7 @@ allocator_sorted_list::operator=(const allocator_sorted_list &other) {
       allocator_metadata_size + block_metadata_size + other.get_space_size();
   _trusted_memory = other.get_parent()->allocate(totalSize);
   std::memcpy(_trusted_memory, other._trusted_memory, totalSize);
+  new (&get_mutex()) std::mutex();
 
   return *this;
 }
@@ -216,7 +219,6 @@ void allocator_sorted_list::do_deallocate_sm(void *at) {
                                 sizeof(void *)) =
         read_block_size(block) + block_metadata_size + read_block_size(curr);
   }
-
 
   if (prev != nullptr) {
     void *prev_end = reinterpret_cast<char *>(prev) + block_metadata_size +

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "dependencies": [
     "boost-system",
-    "boost-container"
+    "boost-container",
+    "gtest"
   ],
   "default-features": [],
   "features": {}

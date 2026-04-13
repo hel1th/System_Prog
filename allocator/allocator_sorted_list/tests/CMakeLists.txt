@@ -5,9 +5,5 @@ add_executable(
 target_link_libraries(
         sys_prog_allctr_allctr_srtd_lst_tests
         PRIVATE
-        GTest::GTest
-        GTest::Main)
-target_link_libraries(
-        sys_prog_allctr_allctr_srtd_lst_tests
-        PRIVATE
+        GTest::gtest_main
         sys_prog_allctr_allctr_srtd_lst)

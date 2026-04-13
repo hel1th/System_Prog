@@ -3,7 +3,8 @@
 
 .idea
 .vscode
-cmake-build-*
+*build*
+
 *.txt
 !CMakeLists.txt
 

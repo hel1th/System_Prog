@@ -1,0 +1,10 @@
+{
+  "name": "sys-prog",
+  "version": "1.0.0",
+  "dependencies": [
+    "boost-system",
+    "boost-container"
+  ],
+  "default-features": [],
+  "features": {}
+}

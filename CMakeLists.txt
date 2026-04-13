@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
 project(sys_prog LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -15,8 +19,14 @@ FetchContent_Declare(
         URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip)
 FetchContent_MakeAvailable(googletest)
 
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost COMPONENTS container REQUIRED) # Ставить через vcpkg
+find_package(Boost REQUIRED COMPONENTS system container)
+
+if(Boost_FOUND)
+    message(STATUS "✅ Boost found: ${Boost_INCLUDE_DIRS}")
+    include_directories(${Boost_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "❌ Boost not found! Check triplet and installation.")
+endif()
 
 add_subdirectory(allocator)
 add_subdirectory(associative_container)
